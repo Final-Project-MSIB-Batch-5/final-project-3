@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const { hashPassword } = require("../helpers/bcrypt");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -14,16 +15,136 @@ module.exports = (sequelize, DataTypes) => {
   }
   User.init(
     {
-      full_name: DataTypes.STRING,
-      email: DataTypes.STRING,
-      password: DataTypes.STRING,
-      gender: DataTypes.STRING,
-      role: DataTypes.STRING,
-      balance: DataTypes.INTEGER,
+      full_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Full name be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Full name be required.",
+          },
+        },
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Email be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Email be required.",
+          },
+          isEmail: {
+            args: true,
+            msg: "Invalid email address format.",
+          },
+        },
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Password be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Password be required.",
+          },
+          len: {
+            args: [6, 10],
+            msg: "Password should be 6 to 10 in length.",
+          },
+        },
+      },
+      gender: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Gender be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Gender be required.",
+          },
+          isIn: {
+            args: [["male", "female"]],
+            msg: "Gender must be male or female.",
+          },
+        },
+      },
+      role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Role be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Role be required.",
+          },
+          isIn: {
+            args: [["admin", "customer"]],
+            msg: "Role must be admin or customer.",
+          },
+        },
+      },
+      balance: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Balance be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Balance be required.",
+          },
+          isInt: {
+            args: true,
+            msg: "Balance must be an integer value.",
+          },
+          min: {
+            args: [0],
+            msg: "Balance cannot be less than 0.",
+          },
+          max: {
+            args: 100000000,
+            msg: "Balance cannot exceed 100000000.",
+          },
+        },
+      },
     },
     {
       sequelize,
       modelName: "User",
+      hooks: {
+        beforeValidate: (user, options) => {
+          user.role = "customer";
+          user.balance = 0;
+        },
+        beforeCreate: (user, options) => {
+          const hashedPassword = hashPassword(user.password);
+          user.password = hashedPassword;
+        },
+        afterCreate: (user, options) => {
+          const rupiahFormat = new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          }).format(user.balance);
+
+          user.balance = rupiahFormat;
+        },
+      },
     }
   );
   return User;

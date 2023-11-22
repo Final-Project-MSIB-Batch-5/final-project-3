@@ -14,8 +14,36 @@ module.exports = (sequelize, DataTypes) => {
   }
   Category.init(
     {
-      type: DataTypes.STRING,
-      sold_product_amount: DataTypes.INTEGER,
+      type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Type be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Type be required.",
+          },
+        },
+      },
+      sold_product_amount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Sold Product Amount be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Sold Product Amount be required.",
+          },
+          isInt: {
+            args: true,
+            msg: "Sold Product Amount must be an integer value.",
+          },
+        },
+      },
     },
     {
       sequelize,
