@@ -1,0 +1,29 @@
+{
+  "name": "final-project-3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-dev": "nodemon bin/http.js",
+    "create-db:dev": "npx sequelize db:create --env development",
+    "migrate-db:dev": "npx sequelize db:migrate --env development",
+    "create-db:prod": "npx sequelize db:create --env production",
+    "migrate-db:prod": "npx sequelize db:migrate --env production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "sequelize": "^6.35.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "sequelize-cli": "^6.6.2"
+  }
+}
