@@ -48,6 +48,11 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Category",
+      hooks: {
+        beforeValidate: (category, options) => {
+          category.sold_product_amount = category.sold_product_amount || 0;
+        },
+      },
     }
   );
   return Category;

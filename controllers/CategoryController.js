@@ -5,7 +5,7 @@ class CategoryController {
     try {
       const { type } = req.body;
 
-      const data = await User.create({
+      const data = await Category.create({
         type,
       });
 
