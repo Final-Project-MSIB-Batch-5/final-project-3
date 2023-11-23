@@ -34,6 +34,7 @@ const authentication = async (req, res, next) => {
     req.userData = {
       id: userData.id,
       email: userData.email,
+      full_name: userData.full_name,
       role: userData.role,
     };
 

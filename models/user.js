@@ -127,22 +127,11 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       hooks: {
         beforeValidate: (user, options) => {
-          user.role = "customer";
-          user.balance = 0;
+          user.balance = user.balance || 0;
         },
         beforeCreate: (user, options) => {
           const hashedPassword = hashPassword(user.password);
           user.password = hashedPassword;
-        },
-        afterCreate: (user, options) => {
-          const rupiahFormat = new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }).format(user.balance);
-
-          user.balance = rupiahFormat;
         },
       },
     }
