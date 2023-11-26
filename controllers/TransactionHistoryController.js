@@ -1,29 +1,42 @@
 const { TransactionHistory, Product, User, Category } = require("../models");
+const { formatToRupiah } = require("../helpers/currency");
 
 class TransactionHistoryController {
   static async createTransactionHistory(req, res) {
     try {
-      const { productId, quantity } = req.body;
-      const user = res.locals.user;
-      const product = await Product.findByPk(productId);
+      const { ProductId, quantity } = req.body;
+
+      const product = await Product.findByPk(ProductId);
+
+      const user = await User.findByPk(req.userData.id);
 
       if (!product) {
-        return res.status(404).json({
-          message: "Product not found",
-        });
+        throw {
+          code: 404,
+          message: "Product not found.",
+        };
+      }
+
+      if (!user) {
+        throw {
+          code: 404,
+          message: "User not found.",
+        };
       }
 
       if (quantity > product.stock) {
-        return res.status(400).json({
-          message: "Insufficient product stock",
-        });
+        throw {
+          code: 400,
+          message: "Insufficient product stock.",
+        };
       }
 
       const totalPrice = product.price * quantity;
       if (user.balance < totalPrice) {
-        return res.status(400).json({
-          message: "Insufficient balance",
-        });
+        throw {
+          code: 400,
+          message: "Insufficient balance.",
+        };
       }
 
       const transaction = await TransactionHistory.sequelize.transaction();
@@ -54,51 +67,118 @@ class TransactionHistoryController {
         return res.status(201).json({
           message: "You have successfully purchased the product",
           transactionBill: {
-            total_price: totalPrice,
-            quantity,
+            total_price: formatToRupiah(transactionHistory.total_price),
+            quantity: transactionHistory.quantity,
             product_name: product.title,
           },
         });
       } catch (error) {
         await transaction.rollback();
-        throw error;
+        if (error.name === "SequelizeValidationError") {
+          const validationErrors = error.errors.map((err) => ({
+            field: err.path,
+            message: err.message,
+          }));
+          res.status(422).json({ errors: validationErrors });
+        } else {
+          res.status(error.code || 500).json({ message: error.message });
+        }
       }
     } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "Internal server error",
+      res.status(error.code || 500).json({
+        message: error.message,
       });
     }
   }
 
   static async getAllTransactionHistoryUsers(req, res) {
     try {
-      const user = res.locals.user;
+      const userId = req.userData.id;
 
       const transactions = await TransactionHistory.findAll({
         where: {
-          UserId: user.id,
+          UserId: userId,
         },
         include: {
           model: Product,
-          attributes: ["name"],
+          attributes: { exclude: ["createdAt", "updatedAt"] },
         },
-        attributes: ["total_price", "quantity"],
+        attributes: { exclude: ["id"] },
       });
 
-      res.status(200).json({ transactions });
+      const transactionsHistories = transactions.map((transaction) => {
+        return {
+          ProductId: transaction.ProductId,
+          UserId: transaction.UserId,
+          quantity: transaction.quantity,
+          total_price: formatToRupiah(transaction.total_price),
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
+          Product: {
+            id: transaction.Product.id,
+            title: transaction.Product.title,
+            price: formatToRupiah(transaction.Product.price),
+            stock: transaction.Product.stock,
+            CategoryId: transaction.Product.CategoryId,
+          },
+        };
+      });
+
+      res.status(200).json({ transactionsHistories });
     } catch (err) {
-      console.log(err);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: err.message });
     }
   }
 
-  static async getAllTransactionHistoryAdmins(req, res) {}
+  static async getAllTransactionHistoryAdmins(req, res) {
+    try {
+      const transactions = await TransactionHistory.findAll({
+        include: [
+          {
+            model: Product,
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+          },
+          {
+            model: User,
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+          },
+        ],
+      });
+
+      const transactionHistories = transactions.map((transaction) => {
+        return {
+          ProductId: transaction.ProductId,
+          UserId: transaction.UserId,
+          quantity: transaction.quantity,
+          total_price: formatToRupiah(transaction.total_price),
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
+          Product: {
+            id: transaction.Product.id,
+            title: transaction.Product.title,
+            price: formatToRupiah(transaction.Product.price),
+            stock: transaction.Product.stock,
+            CategoryId: transaction.Product.CategoryId,
+          },
+          User: {
+            id: transaction.User.id,
+            email: transaction.User.email,
+            balance: formatToRupiah(transaction.User.balance),
+            gender: transaction.User.gender,
+            role: transaction.User.role,
+          },
+        };
+      });
+
+      res.status(200).json({ transactionHistories });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 
   static async getTransactionHistoryById(req, res) {
     try {
       const { id } = req.params;
-      const user = res.locals.user;
 
       const transaction = await TransactionHistory.findOne({
         where: { id },
@@ -106,22 +186,40 @@ class TransactionHistoryController {
       });
 
       if (!transaction) {
-        return res.status(404).json({
+        throw {
+          code: 404,
           message: "Transaction not found",
-        });
+        };
       }
 
-      if (user.role !== "admin" && transaction.UserId !== user.id) {
-        return res.status(401).json({
-          message: "Unauthorized access",
-        });
+      if (
+        req.userData.role !== "admin" &&
+        transaction.UserId !== req.userData.id
+      ) {
+        throw {
+          code: 401,
+          message: "Unauthorized access.",
+        };
       }
 
-      res.status(200).json({ transaction });
+      res.status(200).json({
+        ProductId: transaction.ProductId,
+        UserId: transaction.UserId,
+        quantity: transaction.quantity,
+        total_price: formatToRupiah(transaction.total_price),
+        createdAt: transaction.createdAt,
+        updatedAt: transaction.updatedAt,
+        Product: {
+          id: transaction.Product.id,
+          title: transaction.Product.title,
+          price: formatToRupiah(transaction.Product.price),
+          stock: transaction.Product.stock,
+          CategoryId: transaction.Product.CategoryId,
+        },
+      });
     } catch (err) {
-      console.log(err);
-      return res.status(500).json({
-        message: "Internal server error",
+      res.status(err.code || 500).json({
+        message: err.message,
       });
     }
   }

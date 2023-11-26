@@ -1,10 +1,10 @@
 const router = require("express").Router();
 const ProductController = require("../controllers/ProductController");
-const authentication = require("../middlewares/authentication");
+const { adminFilter } = require("../middlewares/admin");
 
-router.use(authentication);
-router.post("/", ProductController.createProduct);
 router.get("/", ProductController.readProduct);
+router.use(adminFilter);
+router.post("/", ProductController.createProduct);
 router.put("/:productId", ProductController.updateProductById);
 router.patch("/:productId", ProductController.updateCategoryProduct);
 router.delete("/:productId", ProductController.deleteProductById);

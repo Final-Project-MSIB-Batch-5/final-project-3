@@ -17,8 +17,40 @@ module.exports = (sequelize, DataTypes) => {
     {
       ProductId: DataTypes.INTEGER,
       UserId: DataTypes.INTEGER,
-      quantity: DataTypes.INTEGER,
-      total_price: DataTypes.INTEGER,
+      quantity: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Quantity be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Quantity be required.",
+          },
+          isInt: {
+            args: true,
+            msg: "Quantity must be an integer value.",
+          },
+        },
+      },
+      total_price: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Total price be not null.",
+          },
+          notEmpty: {
+            args: true,
+            msg: "Total price be required.",
+          },
+          isInt: {
+            args: true,
+            msg: "Total price must be an integer value.",
+          },
+        },
+      },
     },
     {
       sequelize,
