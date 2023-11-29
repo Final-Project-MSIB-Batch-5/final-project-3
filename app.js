@@ -4,10 +4,9 @@ const routes = require("./routes");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(routes);
-
 app.get("/", (req, res) => {
   res.send("Final Project 3");
 });
+app.use(routes);
 
 module.exports = app;
