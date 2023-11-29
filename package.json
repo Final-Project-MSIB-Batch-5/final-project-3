@@ -9,7 +9,8 @@
     "create-db:dev": "npx sequelize db:create --env development",
     "migrate-db:dev": "npx sequelize db:migrate --env development",
     "create-db:prod": "npx sequelize db:create --env production",
-    "migrate-db:prod": "npx sequelize db:migrate --env production"
+    "migrate-db:prod": "npx sequelize db:migrate --env production",
+    "seed-db:prod": "npx sequelize db:seed:all --env production"
   },
   "keywords": [],
   "author": "",
