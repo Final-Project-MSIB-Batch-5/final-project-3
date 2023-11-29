@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node bin/http.js",
     "start-dev": "nodemon bin/http.js",
     "create-db:dev": "npx sequelize db:create --env development",
     "migrate-db:dev": "npx sequelize db:migrate --env development",
