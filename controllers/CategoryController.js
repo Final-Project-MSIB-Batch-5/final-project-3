@@ -1,4 +1,5 @@
 const { Category, Product } = require("../models");
+const { formatToRupiah } = require("../helpers/currency");
 
 class CategoryController {
   static async addCategory(req, res) {
@@ -36,13 +37,34 @@ class CategoryController {
 
   static async getAllCategories(req, res) {
     try {
-      const data = await Category.findAll({
+      const getCategories = await Category.findAll({
         include: {
           model: Product,
         },
       });
 
-      res.status(200).json({ categories: data });
+      const categories = getCategories.map((category) => {
+        return {
+          id: category.id,
+          type: category.type,
+          sold_product_amount: category.sold_product_amount,
+          createdAt: category.createdAt,
+          updatedAt: category.updatedAt,
+          Products: category.Products.map((product) => {
+            return {
+              id: product.id,
+              title: product.title,
+              price: formatToRupiah(product.price),
+              stock: product.stock,
+              CategoryId: product.CategoryId,
+              createdAt: product.createdAt,
+              updatedAt: product.updatedAt,
+            };
+          }),
+        };
+      });
+
+      res.status(200).json({ categories });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

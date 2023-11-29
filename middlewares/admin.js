@@ -3,7 +3,7 @@ const adminFilter = async (req, res, next) => {
     // cek user role
     if (req.userData.role !== "admin") {
       throw {
-        code: 403,
+        code: 401,
         message: "You do not have permission to access.",
       };
     }

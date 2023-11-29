@@ -39,10 +39,7 @@ class ProductController {
         },
       });
     } catch (error) {
-      if (
-        error.name === "SequelizeUniqueConstraintError" ||
-        error.name === "SequelizeValidationError"
-      ) {
+      if (error.name === "SequelizeValidationError") {
         const validationErrors = error.errors.map((err) => ({
           field: err.path,
           message: err.message,

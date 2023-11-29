@@ -127,7 +127,11 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       hooks: {
         beforeValidate: (user, options) => {
-          user.balance = user.balance || 0;
+          // Hanya jalankan ketika melakukan create
+          console.log(user.id, "test");
+          if (!user.id) {
+            user.balance = user.balance || 0;
+          }
         },
         beforeCreate: (user, options) => {
           const hashedPassword = hashPassword(user.password);
@@ -136,5 +140,6 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   );
+
   return User;
 };

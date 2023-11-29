@@ -2,6 +2,7 @@ const { User } = require("../models");
 const { formatToRupiah } = require("../helpers/currency");
 const { comparePassword } = require("../helpers/bcrypt");
 const { generateToken } = require("../helpers/jwt");
+const { INTEGER } = require("sequelize");
 
 class UserController {
   static async register(req, res) {
@@ -155,9 +156,16 @@ class UserController {
   static async topUp(req, res) {
     try {
       const { balance } = req.body;
+      const id = req.userData.id;
+      const newUserModel = User.build({ balance, id });
 
-      const user = await User.findByPk(req.userData.id);
+      await newUserModel.validate({ fields: ["balance"] });
 
+      const user = await User.findOne({
+        where: {
+          id: id,
+        },
+      });
       const newBalance = parseInt(balance) + parseInt(user.balance);
 
       const [arrowAffected, [data]] = await User.update(
@@ -185,10 +193,7 @@ class UserController {
         )}`,
       });
     } catch (error) {
-      if (
-        error.name === "SequelizeUniqueConstraintError" ||
-        error.name === "SequelizeValidationError"
-      ) {
+      if (error.name === "SequelizeValidationError") {
         const validationErrors = error.errors.map((err) => ({
           field: err.path,
           message: err.message,

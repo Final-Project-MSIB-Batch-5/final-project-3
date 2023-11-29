@@ -4,9 +4,9 @@ const { formatToRupiah } = require("../helpers/currency");
 class TransactionHistoryController {
   static async createTransactionHistory(req, res) {
     try {
-      const { ProductId, quantity } = req.body;
+      const { productId, quantity } = req.body;
 
-      const product = await Product.findByPk(ProductId);
+      const product = await Product.findByPk(productId);
 
       const user = await User.findByPk(req.userData.id);
 
@@ -65,7 +65,7 @@ class TransactionHistoryController {
         await transaction.commit();
 
         return res.status(201).json({
-          message: "You have successfully purchased the product",
+          message: "You have successfully purchase the product",
           transactionBill: {
             total_price: formatToRupiah(transactionHistory.total_price),
             quantity: transactionHistory.quantity,
@@ -106,7 +106,7 @@ class TransactionHistoryController {
         attributes: { exclude: ["id"] },
       });
 
-      const transactionsHistories = transactions.map((transaction) => {
+      const transactionHistories = transactions.map((transaction) => {
         return {
           ProductId: transaction.ProductId,
           UserId: transaction.UserId,
@@ -124,7 +124,7 @@ class TransactionHistoryController {
         };
       });
 
-      res.status(200).json({ transactionsHistories });
+      res.status(200).json({ transactionHistories });
     } catch (err) {
       return res.status(500).json({ message: err.message });
     }
